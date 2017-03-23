@@ -21,16 +21,26 @@ public class HTTPServer
 	// @ForNow
 	protected static int connectionNumber = 0;
 
+	protected String root;
 	protected ServerSocket server;
 	protected AccepterThread accepter;
 	protected ArrayList<ConnectionThread> connectionThreads;
 
-	public HTTPServer(int port)
+	public HTTPServer(int port, String homeLocation)
 		throws IOException
 	{
 		server = new ServerSocket(port);
-		connectionThreads = new ArrayList<ConnectionThread>();
-		File explorer = new File("log");
+		connectionThreads = new ArrayList<ConnectionThread>();	
+		// Per sicurezza viene ricontrollato che la cartella indicata esista e che sia effettivamente una cartella e non qualcos'altro
+		File explorer = new File(homeLocation);
+		if(!explorer.exists())
+			throw new IOException("Home directory non valida: non e' una cartella");
+		if(!explorer.isDirectory())
+			throw new IOException("Home directory non valida: la risorsa indicata non e' una directory.");
+		root = homeLocation;
+		// @Temp @Debug Al momento il log viene fatto nella cartella indicata dall'utente da linea di comando, in futuro probabilmente tornera' ad essere
+		// nella cartella principale dove e' contenuto l'eseguibile del server
+		explorer = new File(root + "/log");
 		if(!explorer.exists())
 			explorer.mkdir();
 		accepter = new AccepterThread();
@@ -109,7 +119,7 @@ public class HTTPServer
 			connection = socket;
 			out = new PrintWriter(connection.getOutputStream());
 			in = new BufferedReader(new InputStreamReader(connection.getInputStream()));
-			log = new PrintWriter(new FileOutputStream("log/" + connection.getLocalPort() + "-" + connectionNumber + ".txt"));
+			log = new PrintWriter(new FileOutputStream(root + "/log/" + connection.getLocalPort() + "-" + connectionNumber + ".txt"));
 			connectionNumber++;
 		}
 		
@@ -122,8 +132,8 @@ public class HTTPServer
 				{
 					HTTPMessage request = readRequest();
 					HTTPMessage response = buildSimpleHTMLResponse();
-					System.out.printf(response.toResponse());
-					out.printf(response.toResponse());	
+					// System.out.printf(response.toResponse());  // @Debug: stampa la risposta su terminale	
+					out.printf(response.toResponse());
 					out.flush();
 					log.printf("--> Richiesta:\n");
 					log.printf(request.toRequest());
