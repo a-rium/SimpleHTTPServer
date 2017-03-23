@@ -8,13 +8,17 @@ public class HTTPMessage extends HashMap<String, String>
 	// se il metodo e la versione non sono conosciuti avranno come valore null
 	private String method;
 	private String httpVersion;
+	private String data;
+	private int status;
 
-	// Se si utilizza il construttore senza parametri verra' creato un messaggio nullo con method e versione impostati a null 
+	// Se si utilizza il construttore senza parametri verra' creato un messaggio nullo con method, data e versione impostati a null 
 	public HTTPMessage()
 	{
 		super();
 		method = null;
 		httpVersion = null;
+		data = null;
+		status = -1;
 	}
 
 	// Inizializza method e httpVersion con la prima riga di un messaggio http, comunemente chiamata header
@@ -23,23 +27,47 @@ public class HTTPMessage extends HashMap<String, String>
 		super();
 		setHeader(header);
 	}
+
+	// Modifica la versione di HTTP utilizzata
+	public void setHTTPVersion(String httpVersion)
+	{
+		this.httpVersion = httpVersion;
+	}
 	
 	// Modifica method e httpVersion dato un header di messaggio http
 	public void setHeader(String header)
 	{
-		int endMethodIndex = header.find("/");
-		int startVersionIndex = header.find("/", endMethodIndex) + 1;
+		int endMethodIndex = header.indexOf("/");
+		int startVersionIndex = header.indexOf("/", endMethodIndex) + 1;
 		method = header.substring(0, endMethodIndex).trim();
-		httpVersion = header.substring(startVersionIndex, header.length).trim();
+		httpVersion = header.substring(startVersionIndex, header.length()).trim();
+	}
+
+	// Modifica il blocco dati con quello dato come parametro
+	public void setData(String data)
+	{
+		this.data = data;
+	}
+
+	// Modifica lo status
+	public void setStatus(int status)
+	{
+		this.status = status;
 	}
 
 	// Data una riga di un messaggio HTTP aggiunge un valore alla HashMap interna		
 	public void add(String httpLine)
 	{
-		int endNameIndex = httpLine.find(":");
-		String name = httpLine.substring(0, endNameIndex).trim();
-		String value = httpLine.substring(endNameIndex+1, httpLine.length).trim();
-		super.put(name, value);
+		int endNameIndex = httpLine.indexOf(":");
+		String attribute = httpLine.substring(0, endNameIndex).trim();
+		String value = httpLine.substring(endNameIndex+1, httpLine.length()).trim();
+		super.put(attribute, value);
+	}
+
+	// Data un attributo e il valore associato viene aggiunta un'entrata alla HashMap interna		
+	public void add(String attribute, String value)
+	{
+		super.put(attribute, value);
 	}
 
 	// Ritorna il metodo utilizzato per il passaggio di parametri con PHP(se non specificato il metodo ritorna null)
@@ -52,5 +80,41 @@ public class HTTPMessage extends HashMap<String, String>
 	public String getHttpVersion()
 	{
 		return httpVersion;
+	}
+
+	// Ritorna il blocco dati del messaggio HTTP(sotto forma di testo)(se non e' presente ritorn null)
+	public String getData()
+	{
+		return data;
+	}
+
+	// Ritorna lo status. Se non e' stato mai selezionato uno stato o il messaggio e' una richiesta il valore ritornato sara' -1
+	public int getStatus()
+	{
+		return status;
+	}
+
+	// Converte in stringa il messaggio, impostando l'header come fosse una richiesta HTTP
+	public String toRequest()
+	{
+		String content = method + " / HTTP/" + httpVersion;
+		for(String attribute : keySet())
+			content += "\n" + attribute + ": " + get(attribute);
+		content += "\n\n";
+		content += data;
+		content += "\n\n";
+		return content;
+	}
+
+	// Converte in stringa il messaggio, impostando l'header come fosse una risposta HTTP
+	public String toResponse()
+	{
+		String content = "HTTP/" + httpVersion + " " + status + " OK";
+		for(String attribute : keySet())
+			content += "\n" + attribute + ": " + get(attribute);
+		content += "\n\n";
+		content += data;
+		content += "\n\n";
+		return content;
 	}
 }

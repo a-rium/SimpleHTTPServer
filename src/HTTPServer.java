@@ -11,6 +11,8 @@ import java.io.IOException;
 
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.net.SocketException;
+import java.net.SocketTimeoutException;
 
 public class HTTPServer
 {
@@ -55,6 +57,13 @@ public class HTTPServer
 					connectionThread.start();
 					connectionThreads.add(connectionThread);
 				}
+				catch(SocketException ste)
+				{
+					if(!running) // eccezione scaturita dalla chiusura della ServerSocket, quindi uscire dal ciclo e terminare il thread
+						break;
+					else
+						ste.printStackTrace();
+				}
 				catch(IOException ie)
 				{
 					ie.printStackTrace();
@@ -63,8 +72,10 @@ public class HTTPServer
 		}
 
 		public void halt()
+			throws IOException
 		{
 			running = false;
+			server.close();
 		}
 
 		public boolean isRunning()
@@ -90,7 +101,6 @@ public class HTTPServer
 			connection = socket;
 			out = new PrintWriter(connection.getOutputStream());
 			in = new BufferedReader(new InputStreamReader(connection.getInputStream()));
-			// @Temp testing the connection and printing a message
 		}
 		
 		@Override
@@ -100,8 +110,18 @@ public class HTTPServer
 			{
 				try
 				{
-					String request = readRequest();
-					System.out.println("Arrivata richiesta:\n" + request);
+					HTTPMessage request = readRequest();
+					HTTPMessage response = buildSimpleHTMLResponse();
+					System.out.printf(response.toResponse());
+					out.printf(response.toResponse());	
+					out.flush();
+				}
+				catch(SocketException ste)
+				{
+					if(!running)
+						break;
+					else
+						ste.printStackTrace();
 				}
 				catch(IOException ie)
 				{
@@ -110,24 +130,46 @@ public class HTTPServer
 			}
 		}
 
-		private String readRequest()
+		private HTTPMessage readRequest()
 			throws IOException
 		{
-			String request = "";
+			String header = in.readLine();
+			HTTPMessage request = new HTTPMessage(header);
 			String currentLine = "";
-			do
+			while(true)
 			{
 				currentLine = in.readLine();
-				request += currentLine;	
-
-			} while(!currentLine.equals(""));
+				if(currentLine.equals(""))
+					break;
+				request.add(currentLine);
+			}
 			
 			return request;
 		}
 
+		public HTTPMessage buildSimpleHTMLResponse()
+		{
+			HTTPMessage response = new HTTPMessage();
+			response.setHTTPVersion("1.1");
+			response.setStatus(200);
+			response.add("Date", "Thur, 23 March 2017 23:59:59 GMT");
+			response.add("Server", "Java SimpleHTTPServer");
+			response.add("Connection", "closed");
+			response.add("Content-type", "text/html");
+			String html = "<html><head><title>~Welcome~</title></head><body><div>Hello visitor! What can I do for you?</div></body></html>";
+			response.add("Content-length", "" + html.length());
+			response.setData(html);
+
+			return response;
+		}	
+
 		public void halt()
+			throws IOException
 		{
 			running = false;
+			out.close();
+			in.close();
+			connection.close();
 		}
 
 		public boolean isRunning()
