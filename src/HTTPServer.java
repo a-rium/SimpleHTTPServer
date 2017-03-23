@@ -2,9 +2,11 @@ package src;
 
 import java.util.ArrayList;
 
+import java.io.File;
 import java.io.PrintWriter;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
+import java.io.FileOutputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.IOException;
@@ -16,6 +18,9 @@ import java.net.SocketTimeoutException;
 
 public class HTTPServer
 {
+	// @ForNow
+	protected static int connectionNumber = 0;
+
 	protected ServerSocket server;
 	protected AccepterThread accepter;
 	protected ArrayList<ConnectionThread> connectionThreads;
@@ -24,8 +29,11 @@ public class HTTPServer
 		throws IOException
 	{
 		server = new ServerSocket(port);
-		accepter = new AccepterThread();
 		connectionThreads = new ArrayList<ConnectionThread>();
+		File explorer = new File("log");
+		if(!explorer.exists())
+			explorer.mkdir();
+		accepter = new AccepterThread();
 		accepter.start();
 	}
 
@@ -90,8 +98,8 @@ public class HTTPServer
 		private Socket connection;
 		private PrintWriter out;
 		private BufferedReader in;
-		// private ObjectOutputStream out;
-		// private ObjectInputStream in;
+
+		private PrintWriter log;
 
 		private boolean running = true;
 
@@ -101,6 +109,8 @@ public class HTTPServer
 			connection = socket;
 			out = new PrintWriter(connection.getOutputStream());
 			in = new BufferedReader(new InputStreamReader(connection.getInputStream()));
+			log = new PrintWriter(new FileOutputStream("log/" + connection.getLocalPort() + "-" + connectionNumber + ".txt"));
+			connectionNumber++;
 		}
 		
 		@Override
@@ -115,6 +125,16 @@ public class HTTPServer
 					System.out.printf(response.toResponse());
 					out.printf(response.toResponse());	
 					out.flush();
+					log.printf("--> Richiesta:\n");
+					log.printf(request.toRequest());
+					log.printf("\n--> Risposta:\n");
+					log.printf(response.toResponse());
+					// @ForNow
+					out.close();
+					in.close();
+					log.close();
+					connection.close();
+					running = false;
 				}
 				catch(SocketException ste)
 				{
