@@ -26,7 +26,8 @@ public class HTTPServer
 	protected static int connectionNumber = 0;
 
 	protected String root;
-	protected final String DEFAULT_PAGE = "/index.html";
+	protected final String DEFAULT_PAGE = "index.html";
+	protected final String ERROR_PAGE = "404.html";
 	protected ServerSocket server;
 	protected AccepterThread accepter;
 	protected ArrayList<ConnectionThread> connectionThreads;
@@ -138,9 +139,22 @@ public class HTTPServer
 					HTTPMessage request = readRequest();
 					String requestedResource = request.getRequestedResource().trim();
 					if(requestedResource.equals("/"))
-						requestedResource += DEFAULT_PAGE;
-					HTTPMessage response = buildSimpleHTMLResponse(requestedResource);
-					// System.out.printf(response.toResponse());  // @Debug: stampa la risposta su terminale	
+						requestedResource = "/" + DEFAULT_PAGE;
+					File explorer = new File(root + requestedResource);
+					HTTPMessage response;
+					if(!explorer.exists())
+					{
+						System.out.println("Richiesta fallita: la risorsa " + requestedResource + " non esiste");
+						response = buildErrorPage();
+					}
+					else if(explorer.isDirectory())
+					{
+						System.out.println("Richiesta fallita: la risorsa " + requestedResource + " e' una directory");
+						response = buildErrorPage();
+					}
+					else
+						response = buildSimpleHTMLResponse(requestedResource);
+						// System.out.printf(response.toResponse());  // @Debug: stampa la risposta su terminale	
 					out.printf(response.toResponse());
 					out.flush();
 					log.printf("--> Richiesta:\n");
@@ -152,7 +166,7 @@ public class HTTPServer
 					in.close();
 					log.close();
 					connection.close();
-					running = false;
+					running = false;	
 				}
 				catch(SocketException ste)
 				{
@@ -186,6 +200,7 @@ public class HTTPServer
 			return request;
 		}
 
+		// Costruisce una semplice risposta HTTP appendendo come body il contenuto del file indicato come parametro
 		public HTTPMessage buildSimpleHTMLResponse(String requestedResource)
 			throws IOException
 		{
@@ -203,6 +218,24 @@ public class HTTPServer
 
 			return response;
 		}	
+
+		// Costruisce una schermata di errore
+		public HTTPMessage buildErrorPage()
+			throws IOException
+		{
+			HTTPMessage response = new HTTPMessage();
+			response.setHTTPVersion("1.1");
+			response.setStatus(404);
+			response.add("Date", currentDate());
+			response.add("Server", "Java SimpleHTTPServer");
+			response.add("Connection", "closed");
+			response.add("Content-type", "text/html");
+			String html = readResource("/" + ERROR_PAGE);
+			response.add("Content-length", "" + html.length());
+			response.setData(html);
+
+			return response;
+		}
 
 		public void halt()
 			throws IOException

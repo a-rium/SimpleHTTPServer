@@ -59,7 +59,7 @@ public class Main
 			BufferedReader in = new BufferedReader(new InputStreamReader(System.in));
 			while(true)
 			{
-				System.out.printf("> ");
+				// System.out.printf("> ");
 				String input = in.readLine();
 				if(input.equals(""))
 					break;
