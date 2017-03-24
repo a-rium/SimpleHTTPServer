@@ -1,6 +1,9 @@
 package src;
 
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Locale;
+import java.util.TimeZone;
 
 import java.io.File;
 import java.io.PrintWriter;
@@ -182,7 +185,7 @@ public class HTTPServer
 			HTTPMessage response = new HTTPMessage();
 			response.setHTTPVersion("1.1");
 			response.setStatus(200);
-			response.add("Date", "Thur, 23 March 2017 23:59:59 GMT");
+			response.add("Date", currentDate());
 			response.add("Server", "Java SimpleHTTPServer");
 			response.add("Connection", "closed");
 			response.add("Content-type", "text/html");
@@ -205,6 +208,23 @@ public class HTTPServer
 		public boolean isRunning()
 		{
 			return running;
+		}
+
+		public String currentDate()
+		{
+			final String[] dayOfWeekString = {"Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"};
+			final String[] monthString = {"Jen", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"};
+			Locale locale = new Locale("en", "EN");
+			TimeZone timeZone = TimeZone.getTimeZone("Europe/Rome");
+			Calendar currentDate = Calendar.getInstance(timeZone, Locale.US);
+			int dayOfWeek = currentDate.get(Calendar.DAY_OF_WEEK) - 1;
+			int dayOfMonth = currentDate.get(Calendar.DAY_OF_MONTH);
+			int month = currentDate.get(Calendar.MONTH);
+			int year = currentDate.get(Calendar.YEAR);
+			int hours = currentDate.get(Calendar.HOUR);
+			int minutes = currentDate.get(Calendar.MINUTE);
+			int seconds = currentDate.get(Calendar.SECOND);
+			return dayOfWeekString[dayOfWeek] + ", " + dayOfMonth + " " + monthString[month] + " " + year + " " + hours + ":" + minutes + ":" + seconds;
 		}
 	}
 }
