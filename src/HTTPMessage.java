@@ -9,6 +9,7 @@ public class HTTPMessage extends HashMap<String, String>
 	private String method;
 	private String httpVersion;
 	private String data;
+	private String requestedResource;
 	private int status;
 
 	// Se si utilizza il construttore senza parametri verra' creato un messaggio nullo con method, data e versione impostati a null 
@@ -18,6 +19,7 @@ public class HTTPMessage extends HashMap<String, String>
 		method = null;
 		httpVersion = null;
 		data = null;
+		requestedResource = null;
 		status = -1;
 	}
 
@@ -37,8 +39,11 @@ public class HTTPMessage extends HashMap<String, String>
 	// Modifica method e httpVersion dato un header di messaggio http
 	public void setHeader(String header)
 	{
-		int endMethodIndex = header.indexOf("/");
-		int startVersionIndex = header.indexOf("/", endMethodIndex) + 1;
+		int endMethodIndex = header.indexOf("/");	// endMethodIndex e' anche l'indice di inizio della stringa corrispondente alla risorsa richiesta
+		int endRequestedResourceIndex = header.indexOf(" HTTP", endMethodIndex);
+		requestedResource = header.substring(endMethodIndex, endRequestedResourceIndex);
+		int startRequestedResourceIndex = header.indexOf("/", endRequestedResourceIndex);
+		int startVersionIndex = header.indexOf("/", startRequestedResourceIndex) + 1;
 		method = header.substring(0, endMethodIndex).trim();
 		httpVersion = header.substring(startVersionIndex, header.length()).trim();
 	}
@@ -74,6 +79,12 @@ public class HTTPMessage extends HashMap<String, String>
 	public String getMethod()
 	{
 		return method;
+	}
+
+	// Ritorna la risorsa richiesta(se non e' stata richiesta nessuna risorsa allora ritorna null)
+	public String getRequestedResource()
+	{
+		return requestedResource;
 	}
 
 	// Ritorna la versione di HTTP utilizzata per lo scambio dei messaggi(se non specificato il metodo ritorna null)

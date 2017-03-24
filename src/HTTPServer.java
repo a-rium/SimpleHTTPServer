@@ -10,6 +10,7 @@ import java.io.PrintWriter;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.io.FileOutputStream;
+import java.io.FileInputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.IOException;
@@ -25,6 +26,7 @@ public class HTTPServer
 	protected static int connectionNumber = 0;
 
 	protected String root;
+	protected final String DEFAULT_PAGE = "/index.html";
 	protected ServerSocket server;
 	protected AccepterThread accepter;
 	protected ArrayList<ConnectionThread> connectionThreads;
@@ -134,7 +136,10 @@ public class HTTPServer
 				try
 				{
 					HTTPMessage request = readRequest();
-					HTTPMessage response = buildSimpleHTMLResponse();
+					String requestedResource = request.getRequestedResource().trim();
+					if(requestedResource.equals("/"))
+						requestedResource += DEFAULT_PAGE;
+					HTTPMessage response = buildSimpleHTMLResponse(requestedResource);
 					// System.out.printf(response.toResponse());  // @Debug: stampa la risposta su terminale	
 					out.printf(response.toResponse());
 					out.flush();
@@ -167,6 +172,7 @@ public class HTTPServer
 			throws IOException
 		{
 			String header = in.readLine();
+			System.out.println("Arrivata richiesta, header: " + header);
 			HTTPMessage request = new HTTPMessage(header);
 			String currentLine = "";
 			while(true)
@@ -180,7 +186,8 @@ public class HTTPServer
 			return request;
 		}
 
-		public HTTPMessage buildSimpleHTMLResponse()
+		public HTTPMessage buildSimpleHTMLResponse(String requestedResource)
+			throws IOException
 		{
 			HTTPMessage response = new HTTPMessage();
 			response.setHTTPVersion("1.1");
@@ -189,7 +196,8 @@ public class HTTPServer
 			response.add("Server", "Java SimpleHTTPServer");
 			response.add("Connection", "closed");
 			response.add("Content-type", "text/html");
-			String html = "<html><head><title>~Welcome~</title></head><body><div>Hello visitor! What can I do for you?</div></body></html>";
+			// String html = "<html><head><title>~Welcome~</title></head><body><div>Hello visitor! What can I do for you?</div></body></html>";
+			String html = readResource(requestedResource);
 			response.add("Content-length", "" + html.length());
 			response.setData(html);
 
@@ -210,6 +218,7 @@ public class HTTPServer
 			return running;
 		}
 
+		// Ritorna data e ora corrente formattata secondo lo standard del protocollo HTTP: <giorno>, <numero giorno> <mese> <anno> <ora>:<minuto>:<secondo>
 		public String currentDate()
 		{
 			final String[] dayOfWeekString = {"Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"};
@@ -225,6 +234,29 @@ public class HTTPServer
 			int minutes = currentDate.get(Calendar.MINUTE);
 			int seconds = currentDate.get(Calendar.SECOND);
 			return dayOfWeekString[dayOfWeek] + ", " + dayOfMonth + " " + monthString[month] + " " + year + " " + hours + ":" + minutes + ":" + seconds;
+		}
+
+		// Ritorna una risorsa(html, css, js...) letta da file collocato alla posizione indicata
+		public String readResource(String filepath)
+			throws IOException
+		{
+			String content = "";
+			BufferedReader resourceIn = new BufferedReader(new InputStreamReader(new FileInputStream(new File(root + filepath))));
+			boolean firstLine = true;
+			while(true)
+			{
+				String line = resourceIn.readLine();
+				if(line == null)
+					break;
+				if(firstLine)
+				{
+					content += line;
+					firstLine = false;
+				}
+				else
+					content += "\n" + line;
+			}
+			return content;
 		}
 	}
 }
