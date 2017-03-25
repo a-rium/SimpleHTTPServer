@@ -210,7 +210,7 @@ public class HTTPServer
 			response.add("Date", currentDate());
 			response.add("Server", "Java SimpleHTTPServer");
 			response.add("Connection", "closed");
-			response.add("Content-type", "text/html");
+			response.add("Content-type", MimeType.getTypeFromFilename(requestedResource));
 			// String html = "<html><head><title>~Welcome~</title></head><body><div>Hello visitor! What can I do for you?</div></body></html>";
 			String html = readResource(requestedResource);
 			response.add("Content-length", "" + html.length());
