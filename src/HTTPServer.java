@@ -5,8 +5,11 @@ import java.util.Calendar;
 import java.util.Locale;
 import java.util.TimeZone;
 
+import java.nio.file.Files;
+
 import java.io.File;
 import java.io.PrintWriter;
+import java.io.OutputStream;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.io.FileOutputStream;
@@ -113,6 +116,7 @@ public class HTTPServer
 	{
 		private Socket connection;
 		private PrintWriter out;
+		private OutputStream dataOut;
 		private BufferedReader in;
 
 		private PrintWriter log;
@@ -123,6 +127,7 @@ public class HTTPServer
 			throws IOException
 		{
 			connection = socket;
+			dataOut = connection.getOutputStream();
 			out = new PrintWriter(connection.getOutputStream());
 			in = new BufferedReader(new InputStreamReader(connection.getInputStream()));
 			log = new PrintWriter(new FileOutputStream(root + "/log/" + connection.getLocalPort() + "-" + connectionNumber + ".txt"));
@@ -155,14 +160,16 @@ public class HTTPServer
 					else
 						response = buildSimpleHTMLResponse(requestedResource);
 						// System.out.printf(response.toResponse());  // @Debug: stampa la risposta su terminale	
-					out.printf(response.toResponse());
+					out.printf(response.toResponse());  // invio header della richiesta
 					out.flush();
+					dataOut.write(response.getData());  // invio body della richiesta
 					log.printf("--> Richiesta:\n");
 					log.printf(request.toRequest());
 					log.printf("\n--> Risposta:\n");
 					log.printf(response.toResponse());
 					// @ForNow
 					out.close();
+					dataOut.close();
 					in.close();
 					log.close();
 					connection.close();
@@ -199,6 +206,7 @@ public class HTTPServer
 			
 			return request;
 		}
+		
 
 		// Costruisce una semplice risposta HTTP appendendo come body il contenuto del file indicato come parametro
 		public HTTPMessage buildSimpleHTMLResponse(String requestedResource)
@@ -211,10 +219,10 @@ public class HTTPServer
 			response.add("Server", "Java SimpleHTTPServer");
 			response.add("Connection", "closed");
 			response.add("Content-type", MimeType.getTypeFromFilename(requestedResource));
-			// String html = "<html><head><title>~Welcome~</title></head><body><div>Hello visitor! What can I do for you?</div></body></html>";
-			String html = readResource(requestedResource);
-			response.add("Content-length", "" + html.length());
-			response.setData(html);
+			
+			byte[] content = Files.readAllBytes(new File(root + requestedResource).toPath());
+			response.add("Content-length", "" + content.length);
+			response.setData(content);
 
 			return response;
 		}	
@@ -230,9 +238,10 @@ public class HTTPServer
 			response.add("Server", "Java SimpleHTTPServer");
 			response.add("Connection", "closed");
 			response.add("Content-type", "text/html");
-			String html = readResource("/" + ERROR_PAGE);
-			response.add("Content-length", "" + html.length());
-			response.setData(html);
+			
+			byte[] content = Files.readAllBytes(new File(root + "/" + ERROR_PAGE).toPath());
+			response.add("Content-length", "" + content.length);
+			response.setData(content);
 
 			return response;
 		}
@@ -242,6 +251,7 @@ public class HTTPServer
 		{
 			running = false;
 			out.close();
+			dataOut.close();
 			in.close();
 			connection.close();
 		}
@@ -269,8 +279,8 @@ public class HTTPServer
 			return dayOfWeekString[dayOfWeek] + ", " + dayOfMonth + " " + monthString[month] + " " + year + " " + hours + ":" + minutes + ":" + seconds;
 		}
 
-		// Ritorna una risorsa(html, css, js...) letta da file collocato alla posizione indicata
-		public String readResource(String filepath)
+		// Ritorna una risorsa testuale(html, css, js...) letta da file collocato alla posizione indicata
+		public String readTextResource(String filepath)
 			throws IOException
 		{
 			String content = "";

@@ -8,7 +8,7 @@ public class HTTPMessage extends HashMap<String, String>
 	// se il metodo e la versione non sono conosciuti avranno come valore null
 	private String method;
 	private String httpVersion;
-	private String data;
+	private byte[] data;
 	private String requestedResource;
 	private int status;
 
@@ -49,7 +49,7 @@ public class HTTPMessage extends HashMap<String, String>
 	}
 
 	// Modifica il blocco dati con quello dato come parametro
-	public void setData(String data)
+	public void setData(byte[] data)
 	{
 		this.data = data;
 	}
@@ -94,7 +94,7 @@ public class HTTPMessage extends HashMap<String, String>
 	}
 
 	// Ritorna il blocco dati del messaggio HTTP(sotto forma di testo)(se non e' presente ritorn null)
-	public String getData()
+	public byte[] getData()
 	{
 		return data;
 	}
@@ -112,8 +112,8 @@ public class HTTPMessage extends HashMap<String, String>
 		for(String attribute : keySet())
 			content += "\n" + attribute + ": " + get(attribute);
 		content += "\n\n";
-		content += data;
-		content += "\n\n";
+		// content += data;
+		// content += "\n\n";
 		return content;
 	}
 
@@ -124,8 +124,8 @@ public class HTTPMessage extends HashMap<String, String>
 		for(String attribute : keySet())
 			content += "\n" + attribute + ": " + get(attribute);
 		content += "\n\n";
-		content += data;
-		content += "\n\n";
+		// content += data;
+		// content += "\n\n";
 		return content;
 	}
 }

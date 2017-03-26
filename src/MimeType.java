@@ -8,7 +8,7 @@ import java.io.IOException;
 
 import java.util.HashMap;
 
-// Classe che offre metodi relative al MIME Type
+// Classe che offre metodi relativi al MIME Type
 public class MimeType
 {
 	private static HashMap<String, String> types;
@@ -60,16 +60,20 @@ public class MimeType
 			new MimeType();
 		// Per poter ricavare l'estensione dal nome del file si cerca l'indice dell'ultimo punto all'interno della stringa,
 		// dopodiche' si estrapola una sottostringa che inizia dall'indice trovato (+ 1 per saltare il punto) alla fine della stringa
-		int lastDotIndex = filename.indexOf(".");
-		if(lastDotIndex < 0)
-			return UNKNOWN_TYPE_IDENTIFIER;
-		int nextDotIndex = filename.indexOf(".", lastDotIndex+1);
-		while(nextDotIndex >= 0)
-		{
-			lastDotIndex = nextDotIndex;
-			nextDotIndex = filename.indexOf(".", lastDotIndex+1);
-		}
+		int lastDotIndex = filename.lastIndexOf(".");
 		String extension = filename.substring(lastDotIndex+1, filename.length());
+		String mimeType = types.get(extension);
+		if(mimeType == null)
+			return UNKNOWN_TYPE_IDENTIFIER;
+		return mimeType;
+	}
+
+	// Data l'estensione ritorna il MIME Type corrispondente.
+	// Se l'estensione non ha un corrispondente viene ritornato il MIME Type indicato da UNKNOWN_TYPE_IDENTIFIER
+	public synchronized static String getCorrespondingType(String extension)
+	{
+		if(!isInstanced)
+			new MimeType();
 		String mimeType = types.get(extension);
 		if(mimeType == null)
 			return UNKNOWN_TYPE_IDENTIFIER;
