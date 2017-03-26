@@ -2,6 +2,11 @@ package src;
 
 import java.util.HashMap;
 
+import java.io.InputStreamReader;
+import java.io.FileInputStream;
+import java.io.BufferedReader;
+import java.io.IOException;
+
 // Classe che rappresenta un messaggio http
 public class HTTPMessage extends HashMap<String, String>
 {
@@ -11,6 +16,9 @@ public class HTTPMessage extends HashMap<String, String>
 	private byte[] data;
 	private String requestedResource;
 	private int status;
+
+	private static HTTPMessage parseCache = null;
+	private static boolean isCached = false;
 
 	// Se si utilizza il construttore senza parametri verra' creato un messaggio nullo con method, data e versione impostati a null 
 	public HTTPMessage()
@@ -23,11 +31,48 @@ public class HTTPMessage extends HashMap<String, String>
 		status = -1;
 	}
 
-	// Inizializza method e httpVersion con la prima riga di un messaggio http, comunemente chiamata header
+	// Costruisce il messaggio dato un header in input
+	// @Hack: se l'header inizia con HTTP allora significa che e' una risposta, altrimenti e' una richiesta
 	public HTTPMessage(String header)
 	{
 		super();
-		setHeader(header);
+		String identifier = header.substring(0, 4);
+		if(identifier != null && identifier.equals("HTTP"))
+			setResponseHeader(header);
+		else
+			setRequestHeader(header);
+		setRequestHeader(header);
+	}
+
+	// Metodo statico che permette di ottenere un messaggio HTTP in base al contenuto del file.
+	// Il file dovra' essere cosi' impostato:
+	// HTTP/<ver> <status> OK			// per risposta
+	// <metodo> <risorsa richiesta> HTTP/<ver>	// per richiesta
+	// <attributo>: <valore>
+	// <attributo>: <valore>
+	// <attributo>: <valore>
+	// ...
+	//
+	// @Think E' veramente necessario "isCached"?
+	public static HTTPMessage parseFromFile(String filename)
+		throws IOException
+	{
+		if(!isCached)
+		{
+			BufferedReader in = new BufferedReader(new InputStreamReader(new FileInputStream(filename)));
+			parseCache = new HTTPMessage();
+			String header = in.readLine();
+			if(header.substring(0, 4).equals("HTTP"))
+				parseCache.setResponseHeader(header);
+			else
+				parseCache.setRequestHeader(header);
+			String line;
+			while((line = in.readLine()) != null)
+				parseCache.add(line);
+			in.close();
+			isCached = true;
+		}
+		return parseCache;
 	}
 
 	// Modifica la versione di HTTP utilizzata
@@ -37,7 +82,7 @@ public class HTTPMessage extends HashMap<String, String>
 	}
 	
 	// Modifica method e httpVersion dato un header di messaggio http
-	public void setHeader(String header)
+	public void setRequestHeader(String header)
 	{
 		int endMethodIndex = header.indexOf("/");	// endMethodIndex e' anche l'indice di inizio della stringa corrispondente alla risorsa richiesta
 		int endRequestedResourceIndex = header.indexOf(" HTTP", endMethodIndex);
@@ -46,6 +91,21 @@ public class HTTPMessage extends HashMap<String, String>
 		int startVersionIndex = header.indexOf("/", startRequestedResourceIndex) + 1;
 		method = header.substring(0, endMethodIndex).trim();
 		httpVersion = header.substring(startVersionIndex, header.length()).trim();
+	}
+
+	public void setResponseHeader(String header)
+	{
+		int startVersionIndex = header.indexOf("/");
+		int endVersionIndex = header.indexOf(" ", startVersionIndex);
+		httpVersion = header.substring(startVersionIndex+1, endVersionIndex);
+		int endStatusIndex = header.indexOf(" ", endVersionIndex+1);
+		// tra la versione e lo status possono esserci molteplici spazi. In questo modo ci si assicura di prendere lo spazio posto dopo lo status
+		while(endStatusIndex-endVersionIndex == 1) 
+		{
+			endVersionIndex = endStatusIndex;
+			endStatusIndex = header.indexOf(" ", endVersionIndex+1);
+		}
+		status = Integer.parseInt(header.substring(endVersionIndex+1, endStatusIndex));
 	}
 
 	// Modifica il blocco dati con quello dato come parametro

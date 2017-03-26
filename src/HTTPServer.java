@@ -31,6 +31,7 @@ public class HTTPServer
 	protected String root;
 	protected final String DEFAULT_PAGE = "index.html";
 	protected final String ERROR_PAGE = "404.html";
+	protected final String SAMPLE_RESPONSE_FILEPATH = "response.fmt";
 	protected ServerSocket server;
 	protected AccepterThread accepter;
 	protected ArrayList<ConnectionThread> connectionThreads;
@@ -115,10 +116,13 @@ public class HTTPServer
 	private class ConnectionThread extends Thread
 	{
 		private Socket connection;
+		// la stream 'out' e' utilizzata per inviare messaggi testuali(gli header della risposta HTTP
 		private PrintWriter out;
+		// la stream 'dataOut' e' utilizzata per inviare messaggi in binario(cioe' le risorse richieste dal client, il body del messaggio HTTP)
 		private OutputStream dataOut;
 		private BufferedReader in;
 
+		// stream per salvare le richieste e le risposte date in un log
 		private PrintWriter log;
 
 		private boolean running = true;
@@ -212,12 +216,19 @@ public class HTTPServer
 		public HTTPMessage buildSimpleHTMLResponse(String requestedResource)
 			throws IOException
 		{
+			try
+			{
+			HTTPMessage response = HTTPMessage.parseFromFile(root + "/" + SAMPLE_RESPONSE_FILEPATH);
+			/*
 			HTTPMessage response = new HTTPMessage();
 			response.setHTTPVersion("1.1");
 			response.setStatus(200);
+			*/
 			response.add("Date", currentDate());
+			/*
 			response.add("Server", "Java SimpleHTTPServer");
 			response.add("Connection", "closed");
+			*/
 			response.add("Content-type", MimeType.getTypeFromFilename(requestedResource));
 			
 			byte[] content = Files.readAllBytes(new File(root + requestedResource).toPath());
@@ -225,6 +236,8 @@ public class HTTPServer
 			response.setData(content);
 
 			return response;
+			} catch(IOException ie) {ie.printStackTrace();}
+			return null;
 		}	
 
 		// Costruisce una schermata di errore
