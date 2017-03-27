@@ -108,6 +108,12 @@ public class HTTPMessage extends HashMap<String, String>
 		status = Integer.parseInt(header.substring(endVersionIndex+1, endStatusIndex));
 	}
 
+	// Modifica la risorsa richiesta
+	public void setRequestedResource(String requestedResource)
+	{
+		this.requestedResource = requestedResource;
+	}
+
 	// Modifica il blocco dati con quello dato come parametro
 	public void setData(byte[] data)
 	{

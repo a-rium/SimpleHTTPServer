@@ -32,6 +32,7 @@ public class HTTPServer
 	protected final String DEFAULT_PAGE = "index.html";
 	protected final String ERROR_PAGE = "404.html";
 	protected final String SAMPLE_RESPONSE_FILEPATH = "response.fmt";
+	protected final String ALTERNATIVE_RESOURCE_POSTFIX = "-alt";
 	protected ServerSocket server;
 	protected AccepterThread accepter;
 	protected ArrayList<ConnectionThread> connectionThreads;
@@ -149,6 +150,10 @@ public class HTTPServer
 					String requestedResource = request.getRequestedResource().trim();
 					if(requestedResource.equals("/"))
 						requestedResource = "/" + DEFAULT_PAGE;
+					// @Ugly E' bruttissimo il costante controllo get/set di requestResource
+					request.setRequestedResource(requestedResource);
+					checkCookies(request);
+					requestedResource = request.getRequestedResource(); // potrebbe essere modificata da checkCookie
 					File explorer = new File(root + requestedResource);
 					HTTPMessage response;
 					if(!explorer.exists())
@@ -193,6 +198,7 @@ public class HTTPServer
 			}
 		}
 
+		// Legge dalla stream di input della socket una richiesta HTTP e la ritorna
 		private HTTPMessage readRequest()
 			throws IOException
 		{
@@ -207,11 +213,39 @@ public class HTTPServer
 					break;
 				request.add(currentLine);
 			}
-			
+
 			return request;
 		}
-		
 
+		public void checkCookies(HTTPMessage request)
+		{
+			// Si controlla se il client ha inviato il cookie "alternative"
+			// Se si allora si guarda se il valore di questo cookie e' "yes"
+			// Se lo e' si tenta di richiamare una versione alternativa della risorsa,
+			// cioe' un file denominato "<nome file>ALTERNATIVE_RESOURCE_POSTFIX<estensione>"
+			// Se tale file non esiste allora si ritorna la risorsa originale
+			String requestedResource = request.getRequestedResource();
+			String cookieFieldValue = request.get("Cookie");
+			if(cookieFieldValue != null)
+			{
+				String[] cookies = cookieFieldValue.split(";");
+				for(String cookie : cookies)
+				{
+					String[] cookiePair = cookie.split("=");
+					if(cookiePair[0].equals("alternative"))
+					{
+						if(cookiePair[1].equals("yes"))
+						{
+							String alternativeResourceVersion = getAlternativeResource(requestedResource);
+							if(alternativeResourceVersion != null)
+								request.setRequestedResource(alternativeResourceVersion);
+						}
+						break;
+					}
+				}
+			}
+		}
+		
 		// Costruisce una semplice risposta HTTP appendendo come body il contenuto del file indicato come parametro
 		public HTTPMessage buildSimpleHTMLResponse(String requestedResource)
 			throws IOException
@@ -290,6 +324,19 @@ public class HTTPServer
 			int minutes = currentDate.get(Calendar.MINUTE);
 			int seconds = currentDate.get(Calendar.SECOND);
 			return dayOfWeekString[dayOfWeek] + ", " + dayOfMonth + " " + monthString[month] + " " + year + " " + hours + ":" + minutes + ":" + seconds;
+		}
+
+		public String getAlternativeResource(String requestedResource)
+		{
+			int startExtension = requestedResource.lastIndexOf(".");
+			String nameWithoutExtension = requestedResource.substring(0, startExtension);
+			String extension = requestedResource.substring(startExtension, requestedResource.length());
+			String alternativeResource = nameWithoutExtension + ALTERNATIVE_RESOURCE_POSTFIX + extension;
+			File explorer = new File(root + alternativeResource);
+			if(explorer.exists())
+				return alternativeResource;
+			else
+				return null;
 		}
 
 		// Ritorna una risorsa testuale(html, css, js...) letta da file collocato alla posizione indicata
