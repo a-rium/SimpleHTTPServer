@@ -146,7 +146,7 @@ public class HTTPServer
 			{
 				try
 				{
-					HTTPMessage request = readRequest();
+					HTTPRequest request = readRequest();
 					String requestedResource = request.getRequestedResource().trim();
 					if(requestedResource.equals("/"))
 						requestedResource = "/" + DEFAULT_PAGE;
@@ -169,13 +169,13 @@ public class HTTPServer
 					else
 						response = buildSimpleHTMLResponse(requestedResource);
 						// System.out.printf(response.toResponse());  // @Debug: stampa la risposta su terminale	
-					out.printf(response.toResponse());  // invio header della richiesta
+					out.printf(response.toString());  // invio header della richiesta
 					out.flush();
 					dataOut.write(response.getData());  // invio body della richiesta
 					log.printf("--> Richiesta:\n");
-					log.printf(request.toRequest());
+					log.printf(request.toString());
 					log.printf("\n--> Risposta:\n");
-					log.printf(response.toResponse());
+					log.printf(response.toString());
 					// @ForNow
 					out.close();
 					dataOut.close();
@@ -199,12 +199,12 @@ public class HTTPServer
 		}
 
 		// Legge dalla stream di input della socket una richiesta HTTP e la ritorna
-		private HTTPMessage readRequest()
+		private HTTPRequest readRequest()
 			throws IOException
 		{
 			String header = in.readLine();
 			System.out.println("Arrivata richiesta, header: " + header);
-			HTTPMessage request = new HTTPMessage(header);
+			HTTPRequest request = new HTTPRequest(header);
 			String currentLine = "";
 			while(true)
 			{
@@ -217,7 +217,7 @@ public class HTTPServer
 			return request;
 		}
 
-		public void checkCookies(HTTPMessage request)
+		public void checkCookies(HTTPRequest request)
 		{
 			// Si controlla se il client ha inviato il cookie "alternative"
 			// Se si allora si guarda se il valore di questo cookie e' "yes"
@@ -250,8 +250,6 @@ public class HTTPServer
 		public HTTPMessage buildSimpleHTMLResponse(String requestedResource)
 			throws IOException
 		{
-			try
-			{
 			HTTPMessage response = HTTPMessage.parseFromFile(root + "/" + SAMPLE_RESPONSE_FILEPATH);
 			/*
 			HTTPMessage response = new HTTPMessage();
@@ -270,15 +268,13 @@ public class HTTPServer
 			response.setData(content);
 
 			return response;
-			} catch(IOException ie) {ie.printStackTrace();}
-			return null;
 		}	
 
 		// Costruisce una schermata di errore
 		public HTTPMessage buildErrorPage()
 			throws IOException
 		{
-			HTTPMessage response = new HTTPMessage();
+			HTTPResponse response = new HTTPResponse();
 			response.setHTTPVersion("1.1");
 			response.setStatus(404);
 			response.add("Date", currentDate());
