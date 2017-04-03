@@ -1,4 +1,4 @@
 HTTP/1.1 200 OK
 Server: Java SimpleHTTPServer
 Connection: closed
-Set-cookie: alternative=yes
+Cache-Control: public,s-maxage=1000

@@ -251,16 +251,7 @@ public class HTTPServer
 			throws IOException
 		{
 			HTTPMessage response = HTTPMessage.parseFromFile(root + "/" + SAMPLE_RESPONSE_FILEPATH);
-			/*
-			HTTPMessage response = new HTTPMessage();
-			response.setHTTPVersion("1.1");
-			response.setStatus(200);
-			*/
 			response.add("Date", currentDate());
-			/*
-			response.add("Server", "Java SimpleHTTPServer");
-			response.add("Connection", "closed");
-			*/
 			response.add("Content-type", MimeType.getTypeFromFilename(requestedResource));
 			
 			byte[] content = Files.readAllBytes(new File(root + requestedResource).toPath());

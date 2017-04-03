@@ -20,13 +20,10 @@ public class HTTPRequest extends HTTPMessage
 	// Modifica method e httpVersion dato un header di messaggio http
 	public void setHeader(String header)
 	{
-		int endMethodIndex = header.indexOf("/");	// endMethodIndex e' anche l'indice di inizio della stringa corrispondente alla risorsa richiesta
-		int endRequestedResourceIndex = header.indexOf(" HTTP", endMethodIndex);
-		requestedResource = header.substring(endMethodIndex, endRequestedResourceIndex);
-		int startRequestedResourceIndex = header.indexOf("/", endRequestedResourceIndex);
-		int startVersionIndex = header.indexOf("/", startRequestedResourceIndex) + 1;
-		method = header.substring(0, endMethodIndex).trim();
-		httpVersion = header.substring(startVersionIndex, header.length()).trim();
+		String[] tokens = header.split(" ");
+		method = tokens[0].trim();
+		requestedResource = tokens[1].trim(); 
+		httpVersion = tokens[2].trim(); 
 	}
 
 	// Ritorna il metodo utilizzato per il passaggio di parametri con PHP(se non specificato il metodo ritorna null)

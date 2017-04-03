@@ -60,10 +60,8 @@ public abstract class HTTPMessage extends HashMap<String, String>
 
 	public void add(String httpLine)
 	{
-		int endNameIndex = httpLine.indexOf(":");
-		String attribute = httpLine.substring(0, endNameIndex).trim();
-		String value = httpLine.substring(endNameIndex+1, httpLine.length()).trim();
-		super.put(attribute, value);
+		String[] tokens = httpLine.split(":");
+		super.put(tokens[0].trim(), tokens[1].trim());
 	}
 
 	public void add(String attribute, String value)
