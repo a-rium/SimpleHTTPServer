@@ -1,5 +1,6 @@
 package src;
 
+/** Classe che rappresenta una richiesta HTTP */
 public class HTTPRequest extends HTTPMessage
 {
 	private String method;
@@ -17,7 +18,7 @@ public class HTTPRequest extends HTTPMessage
 		setHeader(header);
 	}
 
-	// Modifica method e httpVersion dato un header di messaggio http
+	/** Modifica method e httpVersion dato un header di messaggio HTTP */
 	public void setHeader(String header)
 	{
 		String[] tokens = header.split(" ");
@@ -26,31 +27,31 @@ public class HTTPRequest extends HTTPMessage
 		httpVersion = tokens[2].trim(); 
 	}
 
-	// Ritorna il metodo utilizzato per il passaggio di parametri con PHP(se non specificato il metodo ritorna null)
+	/** Ritorna il metodo utilizzato per il passaggio di parametri con PHP(se non specificato il metodo ritorna null) */
 	public String getMethod()
 	{
 		return method;
 	}
 
-	// Ritorna la risorsa richiesta(se non e' stata richiesta nessuna risorsa allora ritorna null)
+	/** Ritorna la risorsa richiesta(se non e' stata richiesta nessuna risorsa allora ritorna null) */
 	public String getRequestedResource()
 	{
 		return requestedResource;
 	}
 
-	// Modifica il metodo di invio dei parametri
+	/** Modifica il metodo di invio dei parametri */
 	public void setMethod(String method)
 	{
 		this.method = method;
 	}
 
-	// Modifica la risorsa richiesta
+	//* Modifica la risorsa richiesta */
 	public void setRequestedResource(String requestedResource)
 	{
 		this.requestedResource = requestedResource;
 	}
 
-	// Converte in stringa il messaggio, impostando l'header come fosse una richiesta HTTP
+	/** Converte in stringa il messaggio, impostando l'header come fosse una richiesta HTTP */
 	public String toString()
 	{
 		String content = method + " / HTTP/" + httpVersion;

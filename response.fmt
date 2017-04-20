@@ -2,3 +2,4 @@ HTTP/1.1 200 OK
 Server: Java SimpleHTTPServer
 Connection: closed
 Cache-Control: public,s-maxage=1000
+Set-cookie: alternative=yes

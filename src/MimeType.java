@@ -8,7 +8,7 @@ import java.io.IOException;
 
 import java.util.HashMap;
 
-// Classe che offre metodi relativi al MIME Type
+/** Classe che offre metodi relativi al MIME Type */
 public class MimeType
 {
 	private static HashMap<String, String> types;
@@ -16,13 +16,14 @@ public class MimeType
 	private static final String UNKNOWN_TYPE_IDENTIFIER = "text/plain";
 	private static final String CONFIG_PATH = "MIME.conf";
 
-	// Il costruttore viene chiamato una sola volta, cioe' quando uno dei metodi viene chiamato per la prima volta.
-	// Leggendo il file indicato da CONFIG_PATH costrusce un dizionario che ha come chiavi le estensioni dei file e come
-	// valore il tipo MIME associato
-	// Il file e' cosi' costruito:
-	// <estensione> <mime-type>
-	// <estensione> <mime-type>
-	// ...
+	/** Il costruttore viene chiamato una sola volta, cioe' quando uno dei metodi viene chiamato per la prima volta.
+	 * Leggendo il file indicato da CONFIG_PATH costrusce un dizionario che ha come chiavi le estensioni dei file e come
+	 * valore il tipo MIME associato
+	 * Il file e' cosi' costruito:
+	 * &lt;estensione&gt; &lt;mime-type&gt;
+	 * &lt;estensione&gt; &lt;mime-type&gt;
+	 * ...
+	 */
 	private MimeType()
 	{
 		try
@@ -47,11 +48,12 @@ public class MimeType
 		}
 	}
 
-	// Dato il nome di un file viene ritornato il MIME Type corrispondente alla sua estensione
-	// Il metodo e' sincronizzato per evitare il caso che 2 entita' eseguono il controllo per verificare
-	// se la classe e' gia' stata instanziata in precedenza allo stesso tempo, generando un problema di concorrenza.
-	// Sebbene l'unico effetto negativo sarebbe che le risorse verrebbero' caricate 2 volte, rendendo il metodo sincronizzato
-	// si elimina il problema alla radice.
+	/** Dato il nome di un file viene ritornato il MIME Type corrispondente alla sua estensione
+	 * Il metodo e' sincronizzato per evitare il caso che 2 entita' eseguono il controllo per verificare
+	 * se la classe e' gia' stata instanziata in precedenza allo stesso tempo, generando un problema di concorrenza.
+	 * Sebbene l'unico effetto negativo sarebbe che le risorse verrebbero' caricate 2 volte, rendendo il metodo sincronizzato
+	 * si elimina il problema alla radice.
+	 */
 	public synchronized static String getTypeFromFilename(String filename)
 	{
 		// Si controlla che la classe sia stata instanziata precedentemente, che significherebbe che tutte le risorse sono gia' state ricaricate.
@@ -68,8 +70,9 @@ public class MimeType
 		return mimeType;
 	}
 
-	// Data l'estensione ritorna il MIME Type corrispondente.
-	// Se l'estensione non ha un corrispondente viene ritornato il MIME Type indicato da UNKNOWN_TYPE_IDENTIFIER
+	/** Data l'estensione ritorna il MIME Type corrispondente.
+	 * Se l'estensione non ha un corrispondente viene ritornato il MIME Type indicato da UNKNOWN_TYPE_IDENTIFIER
+	 */
 	public synchronized static String getCorrespondingType(String extension)
 	{
 		if(!isInstanced)

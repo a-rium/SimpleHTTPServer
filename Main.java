@@ -8,8 +8,14 @@ import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.io.IOException;
 
+//! Classe principale dalla quale ha inizio l'esecuzione del programma
 public class Main
 {
+	/** In questa funzione si controlla se l'utente ha passato dei parametri da riga di comando al lancio del programma<br>
+	 *  Questi possono essere:<br> 
+	 *  --port &lt;porta&gt; 		(per modificare la porta sulla quale il server sara' in ascolto di richieste di handshaking)<br>
+	 *  --home &lt;path cartella&gt; 	(per modificare la cartella radice vista dal server)
+	 */
 	public static void main(String[] args)
 	{
 		String homeLocation = ".";

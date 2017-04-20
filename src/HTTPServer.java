@@ -23,6 +23,7 @@ import java.net.Socket;
 import java.net.SocketException;
 import java.net.SocketTimeoutException;
 
+/** Classe che rappresenta il server di richieste HTTP */
 public class HTTPServer
 {
 	// @ForNow
@@ -66,8 +67,9 @@ public class HTTPServer
 			connection.halt();
 	}
 	
-	// Thread che rimane in costante ascolto di richieste di handshaking.
-	// Ricevuta una richiesta genera un ConnectionThread che si occupi della connessione, dopodiche' ritorna ad ascoltare
+	/** Thread che rimane in costante ascolto di richieste di handshaking.<br>
+	 *  Ricevuta una richiesta genera un ConnectionThread che si occupi della connessione, dopodiche' ritorna ad ascoltare
+	 */
 	private class AccepterThread extends Thread
 	{
 		private boolean running = true;
@@ -113,17 +115,17 @@ public class HTTPServer
 		}
 	}
 	
-	// Ascolta le richieste provenienti dalle socket, quindi formula risposte idonee e le invia
+	/** Ascolta le richieste provenienti dalle socket, quindi formula risposte idonee e le invia */
 	private class ConnectionThread extends Thread
 	{
 		private Socket connection;
-		// la stream 'out' e' utilizzata per inviare messaggi testuali(gli header della risposta HTTP
+		/** la stream 'out' e' utilizzata per inviare messaggi testuali(gli header della risposta HTTP */
 		private PrintWriter out;
-		// la stream 'dataOut' e' utilizzata per inviare messaggi in binario(cioe' le risorse richieste dal client, il body del messaggio HTTP)
+		/** la stream 'dataOut' e' utilizzata per inviare messaggi in binario(cioe' le risorse richieste dal client, il body del messaggio HTTP) */
 		private OutputStream dataOut;
 		private BufferedReader in;
 
-		// stream per salvare le richieste e le risposte date in un log
+		/** stream per salvare le richieste e le risposte date in un log */
 		private PrintWriter log;
 
 		private boolean running = true;
@@ -198,7 +200,7 @@ public class HTTPServer
 			}
 		}
 
-		// Legge dalla stream di input della socket una richiesta HTTP e la ritorna
+		/** Legge dalla stream di input della socket una richiesta HTTP e la ritorna */
 		private HTTPRequest readRequest()
 			throws IOException
 		{
@@ -217,13 +219,15 @@ public class HTTPServer
 			return request;
 		}
 
+		/** Controlla se il client ha inviato il cookie "alternative"<br>
+		 * Se si allora si guarda se il valore di questo cookie e' "yes"<br>
+		 * Se lo e' si tenta di richiamare una versione alternativa della risorsa,<br>
+		 * cioe' un file denominato "&lt;nome file&gt;ALTERNATIVE_RESOURCE_POSTFIX&lt;estensione&gt;"
+		 * Se tale file non esiste allora si ritorna la risorsa originale
+		 */
 		public void checkCookies(HTTPRequest request)
 		{
-			// Si controlla se il client ha inviato il cookie "alternative"
-			// Se si allora si guarda se il valore di questo cookie e' "yes"
-			// Se lo e' si tenta di richiamare una versione alternativa della risorsa,
-			// cioe' un file denominato "<nome file>ALTERNATIVE_RESOURCE_POSTFIX<estensione>"
-			// Se tale file non esiste allora si ritorna la risorsa originale
+		
 			String requestedResource = request.getRequestedResource();
 			String cookieFieldValue = request.get("Cookie");
 			if(cookieFieldValue != null)
@@ -246,7 +250,7 @@ public class HTTPServer
 			}
 		}
 		
-		// Costruisce una semplice risposta HTTP appendendo come body il contenuto del file indicato come parametro
+		/** Costruisce una semplice risposta HTTP appendendo come body il contenuto del file indicato come parametro */
 		public HTTPMessage buildSimpleHTMLResponse(String requestedResource)
 			throws IOException
 		{
@@ -261,7 +265,7 @@ public class HTTPServer
 			return response;
 		}	
 
-		// Costruisce una schermata di errore
+		/** Costruisce una schermata di errore */
 		public HTTPMessage buildErrorPage()
 			throws IOException
 		{
@@ -273,7 +277,7 @@ public class HTTPServer
 			response.add("Connection", "closed");
 			response.add("Content-type", "text/html");
 			
-			byte[] content = Files.readAllBytes(new File(root + "/" + ERROR_PAGE).toPath());
+			byte[] content = Files.readAllBytes(new File(ERROR_PAGE).toPath());
 			response.add("Content-length", "" + content.length);
 			response.setData(content);
 
@@ -295,7 +299,8 @@ public class HTTPServer
 			return running;
 		}
 
-		// Ritorna data e ora corrente formattata secondo lo standard del protocollo HTTP: <giorno>, <numero giorno> <mese> <anno> <ora>:<minuto>:<secondo>
+		/** Ritorna data e ora corrente formattata secondo lo standard del protocollo HTTP:<br>
+		    &lt;giorno&gt;, &lt;numero giorno&gt; &lt;mese&gt; &lt;anno&gt; &lt;ora&gt;:&lt;minuto&gt;:&lt;secondo&gt;*/
 		public String currentDate()
 		{
 			final String[] dayOfWeekString = {"Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"};
@@ -313,6 +318,7 @@ public class HTTPServer
 			return dayOfWeekString[dayOfWeek] + ", " + dayOfMonth + " " + monthString[month] + " " + year + " " + hours + ":" + minutes + ":" + seconds;
 		}
 
+		/** Controlla l'esistenza di una risorsa alternativa. Se presente ritorna il suo nome, altrimenti ritorna null */
 		public String getAlternativeResource(String requestedResource)
 		{
 			int startExtension = requestedResource.lastIndexOf(".");
@@ -326,7 +332,7 @@ public class HTTPServer
 				return null;
 		}
 
-		// Ritorna una risorsa testuale(html, css, js...) letta da file collocato alla posizione indicata
+		/** Ritorna una risorsa testuale(html, css, js...) letta da file collocato alla posizione indicata */
 		public String readTextResource(String filepath)
 			throws IOException
 		{
